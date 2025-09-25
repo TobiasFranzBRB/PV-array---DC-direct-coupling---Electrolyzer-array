@@ -61,6 +61,27 @@ alpha_sc = (alpha_Isc_pct_per_C/100.0) * Isc_ref
 beta_voc = (beta_Voc_pct_per_C /100.0) * Voc_ref
 gamma_pmp = -0.29
 
+# --- Sidebar credit (above "Inputs") ---
+with st.sidebar:
+    st.markdown(
+        """
+        <div class="brand-badge">
+            Built by: <a href="https://x.com/tobias_franzbrb" target="_blank">Tobias Franz</a>
+        </div>
+        <style>
+        .brand-badge {
+            font-size: 0.9rem;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.08);
+            margin: 0.25rem 0 0.5rem 0;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 # =========================
 # Debounced sidebar form: Inputs (Apply to recompute)
 # =========================
@@ -1154,29 +1175,6 @@ with cfg2:
     st.write(f"  • Maximum cell current density: **{max_current_density:,.5f} A/cm²**")
 
 
-# =========================
-# Footer
-# =========================
-st.markdown(
-    """
-    <style>
-    .footer-tf {
-        position: fixed;
-        right: 12px;
-        bottom: 8px;
-        z-index: 1000;
-        background: rgba(255,255,255,0.80);
-        padding: 6px 10px;
-        border-radius: 8px;
-        font-size: 0.9rem;
-        box-shadow: 0 0 8px rgba(0,0,0,0.08);
-    }
-    </style>
-    <div class="footer-tf">
-        Built by: <a href="https://x.com/tobias_franzbrb" target="_blank">Tobias Franz</a>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+
 
 
