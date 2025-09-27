@@ -1086,6 +1086,106 @@ def _mk_polarization_figure_interactive():
     return fig
 # -------------------------------------------------------------------------------
 
+def _mk_cell_jU_day_pair():
+    def _get_cell_day_series(day_str):
+        mask = coupling_results.index.strftime("%Y-%m-%d") == day_str
+        return coupling_results.loc[mask, ['j_cell_Acm2', 'U_cell_V']].copy()
+
+    df_w = _get_cell_day_series(WINTER_DAY)
+    df_s = _get_cell_day_series(SUMMER_DAY)
+
+    def _safe_max(series):
+        if series is None or series.empty:
+            return 0.0
+        vals = pd.to_numeric(series.replace([np.inf, -np.inf], np.nan), errors="coerce").dropna()
+        return float(vals.max()) if not vals.empty else 0.0
+
+    # Colors
+    j_color = "red"
+    u_color = "blue"
+
+    # Global limits across both days (same on both subplots)
+    j_max = max(_safe_max(df_w.get('j_cell_Acm2')), _safe_max(df_s.get('j_cell_Acm2')))
+    u_max_data = max(_safe_max(df_w.get('U_cell_V')), _safe_max(df_s.get('U_cell_V')))
+    # U-axis lower bound is U_NERNST_V; upper bound is 1.1×max(u_max_data, U_NERNST_V)
+    u_lower = float(U_NERNST_V)
+    u_upper = 1.1 * max(u_max_data, u_lower)
+    # j-axis lower bound at 0; upper bound 1.1×max(j)
+    j_upper = 1.1 * j_max if j_max > 0 else 1.0
+
+    fig = make_subplots(
+        rows=1, cols=2,
+        specs=[[{"secondary_y": True}, {"secondary_y": True}]],
+        subplot_titles=(
+            f"Electrolyzer cell — {WINTER_DAY} (Winter)",
+            f"Electrolyzer cell — {SUMMER_DAY} (Summer)",
+        ),
+        horizontal_spacing=0.08
+    )
+
+    def _add_day(df, col, showlegend):
+        if df is None or df.empty:
+            fig.add_annotation(text="No coupling data", xref=f"x{col}", yref=f"y{col}",
+                               x=0.5, y=0.5, showarrow=False)
+            return
+        # j (left axis)
+        fig.add_trace(
+            go.Scatter(
+                x=df.index, y=df['j_cell_Acm2'].astype(float),
+                mode="lines+markers", name="j (A/cm²)",
+                line=dict(width=2, color=j_color),
+                marker=dict(size=6, color=j_color),
+                hovertemplate="Time=%{x|%H:%M}<br>j=%{y:.4f} A/cm²<extra></extra>",
+                showlegend=showlegend,
+            ),
+            row=1, col=col, secondary_y=False
+        )
+        # U_cell (right axis)
+        fig.add_trace(
+            go.Scatter(
+                x=df.index, y=df['U_cell_V'].astype(float),
+                mode="lines+markers", name="U_cell (V)",
+                line=dict(width=2, color=u_color),
+                marker=dict(size=6, color=u_color),
+                hovertemplate="Time=%{x|%H:%M}<br>U=%{y:.3f} V<extra></extra>",
+                showlegend=showlegend,
+            ),
+            row=1, col=col, secondary_y=True
+        )
+
+    _add_day(df_w, 1, True)   # legend only once
+    _add_day(df_s, 2, False)
+
+    # X axes
+    fig.update_xaxes(title_text="Time", tickformat="%H:%M", row=1, col=1)
+    fig.update_xaxes(title_text="Time", tickformat="%H:%M", row=1, col=2)
+
+    for c in (1, 2):
+        # left y: current density (red)
+        fig.update_yaxes(
+            title_text="Cell current density j (A/cm²)",
+            range=[0, j_upper],
+            row=1, col=c, secondary_y=False,
+            tickfont=dict(color=j_color),
+            title_font=dict(color=j_color),   # <-- fix
+        )
+        # right y: cell voltage (blue)
+        fig.update_yaxes(
+            title_text="Cell voltage U_cell (V)",
+            range=[u_lower, u_upper],
+            row=1, col=c, secondary_y=True,
+            tickfont=dict(color=u_color),
+            title_font=dict(color=u_color),   # <-- fix
+        )
+
+    fig.update_layout(
+        height=460,
+        plot_bgcolor="white",
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0)
+    )
+    return fig
+
+
 
 # =========================
 # TOP KPIs — 6 key metrics BEFORE first figure
@@ -1117,6 +1217,10 @@ st.plotly_chart(_mk_h2_daily_figure(), use_container_width=True)
 
 st.markdown("## Electrolyzer-Cell Polarization Curve (U–j)")
 st.plotly_chart(_mk_polarization_figure_interactive(), use_container_width=True)
+
+# NEW: cell j & U over the day — Winter & Summer
+st.markdown("## Electrolyzer Cell — j & U over the day")
+st.plotly_chart(_mk_cell_jU_day_pair(), use_container_width=True)
 
 # =========================
 # DASHBOARD (bottom) — Maxima & configuration summary
