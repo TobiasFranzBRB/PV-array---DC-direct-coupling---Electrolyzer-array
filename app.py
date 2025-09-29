@@ -833,8 +833,25 @@ def _mk_iv_figure_pair(winter_day, summer_day):
 
     # Common Y limit on BOTH subplots = 1.1 × max(Imp over the two days)
     imax_common = 1.1 * max(imax_mpp_w, imax_mpp_s, 1e-9)
-    fig.update_yaxes(range=[0.0, imax_common], row=1, col=1)
-    fig.update_yaxes(range=[0.0, imax_common], row=1, col=2)
+
+    for c in (1, 2):
+        fig.update_xaxes(
+            showgrid=True, gridwidth=1, gridcolor="rgba(0,0,0,0.08)",
+            zeroline=False,
+            row=1, col=c
+        )
+
+    fig.update_yaxes(
+        title_text="Array Current I (A)",
+        range=[0.0, imax_common],
+        row=1, col=1
+    )
+    fig.update_yaxes(
+        title_text="Array Current I (A)",
+        range=[0.0, imax_common],
+        row=1, col=2
+    )
+
 
     fig.update_layout(
         height=560,
