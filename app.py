@@ -296,7 +296,7 @@ def fetch_pvgis_and_effective_irradiance(site_lat, site_lon, site_alt, site_tz, 
         latitude=SITE_LAT, longitude=SITE_LON,
         surface_tilt=SURFACE_TILT, surface_azimuth=SURFACE_AZIMUTH,
         start=START, end=END,
-        map_variables=True, components=True, usehorizon=True
+        map_variables=True, components=True, usehorizon=True, url="https://re.jrc.ec.europa.eu/api/v5_3/"
     )
     if "time" in data.columns:
         data = data.set_index("time")
